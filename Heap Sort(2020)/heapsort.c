@@ -7,7 +7,6 @@
 
 
 int page_cnt;
-int RECORD_CNT;
 int record_cnt;
 
 void swap(char *a, char*b){
@@ -22,6 +21,8 @@ Person parseRecord(char *recordbuf){
 	Person p;
 	char *temp;
 	char copy[RECORD_SIZE];
+
+	
 	strcpy(copy, recordbuf);
 	temp = strtok(copy,"#");
 	strcpy(p.sn,temp);
@@ -52,10 +53,11 @@ void writePage(FILE *fp, const char *pagebuf, int pagenum)
 }
 
 void heapify(char **heaparray, int n){//최소 힙 구성
-	Person p;
-	Person t;
+	Person p, t;
 	int temp;
 	int j;
+
+
 	for(int i = 1; i <= n; i++){
 		p = parseRecord(heaparray[i]);
 		temp = i/2;
@@ -109,6 +111,7 @@ void makeSortedFile(FILE *outputfp, char **heaparray)
 
 int main(int argc, char *argv[])
 {
+	int recordCheck = 0;
 	int pageIndex = 0;
 	int heapIndex = 1;
 	char pagebuf[PAGE_SIZE];
@@ -131,7 +134,6 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-
 	readPage(inputfp, pagebuf, 0);
 	strncpy((char*)&page_cnt, pagebuf, 4);
 	strncpy((char*)&record_cnt, &pagebuf[4], 4);
@@ -140,20 +142,19 @@ int main(int argc, char *argv[])
 	heaparray = malloc(sizeof(char *) * (record_cnt+1));
 	for(int i = 0; i <= record_cnt; i++) heaparray[i] = malloc(sizeof(char) * RECORD_SIZE);
 
-
 	for(int i = 1; i < page_cnt; i++){
 		readPage(inputfp,pagebuf, i);
 		pageIndex = 0;
 	
-		while(pageIndex+RECORD_SIZE < PAGE_SIZE){
+		while(pageIndex+RECORD_SIZE < PAGE_SIZE && recordCheck < record_cnt){
 			strncpy(heaparray[heapIndex++], &pagebuf[pageIndex], RECORD_SIZE);
 			pageIndex+=100;
+			recordCheck++;
 		}
 	}
 
 	buildHeap(inputfp, heaparray);
-	//printHeap(heaparray);
-	
+//	printHeap(heaparray);
 	makeSortedFile(outputfp, heaparray);
 
 	for(int i = 0; i <= record_cnt; i++) free(heaparray[i]);
